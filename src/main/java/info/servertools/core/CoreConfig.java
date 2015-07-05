@@ -32,6 +32,7 @@ public class CoreConfig {
     public static int DEFAULT_REMOVE_ALL_RANGE;
     public static String OP_CHAT_PREFIX;
     public static String VOICE_CHAT_PREFIX;
+    public static boolean LOG_EXCLUDE_OPS;
 
     public static boolean ENABLE_HELP_OVERRIDE;
 
@@ -59,6 +60,7 @@ public class CoreConfig {
             LOG_BLOCK_BREAKS = configuration.get(category, "Log Block Breaks", false, "This will log all blocks broken by players and fake players").getBoolean(false);
             LOG_BLOCK_PLACES = configuration.get(category, "Log Block Places", false, "This will log all blocks placed by players and fake players").getBoolean(false);
             LOG_BLOCK_INTERACT = configuration.get(category, "Log Block Interact", false, "This will log all blocks Interacted by players and fake players").getBoolean(false);
+            LOG_EXCLUDE_OPS = configuration.get(category,"Log OPs exclude",true,"Will OPs be excluded").getBoolean(true);
 
         } catch (Exception e) {
             ServerTools.LOG.log(Level.FATAL, "Failed to load core configuration", e);

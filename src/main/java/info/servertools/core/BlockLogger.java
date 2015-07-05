@@ -20,6 +20,7 @@ import info.servertools.core.util.SaveThread;
 
 import com.google.common.io.Files;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import info.servertools.core.util.ServerUtils;
 import net.minecraft.block.Block;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -77,6 +78,7 @@ public class BlockLogger {
     @SubscribeEvent
     public void onBlockBreak(BlockEvent.BreakEvent event) {
         if (!logBlockBreaks) { return; }
+        if(CoreConfig.LOG_EXCLUDE_OPS && ServerUtils.isOP(event.getPlayer().getGameProfile())) {return;}
         final File logFile = new File(breakDirectory, DATE_FORMAT.format(Calendar.getInstance().getTime()) + ".csv");
         new SaveThread(String.format(
                 "%s,%s,%s,%s,%s,%s,%s,%s,%s",
@@ -110,6 +112,7 @@ public class BlockLogger {
     @SubscribeEvent
     public void onBlockPlace(BlockEvent.PlaceEvent event) {
         if (!logBlockPlaces) { return; }
+        if(CoreConfig.LOG_EXCLUDE_OPS && ServerUtils.isOP(event.player.getGameProfile())) {return;}
         final File logFile = new File(placeDirectory, DATE_FORMAT.format(Calendar.getInstance().getTime()) + ".csv");
         new SaveThread(String.format(
                 "%s,%s,%s,%s,%s,%s,%s,%s,%s",
@@ -146,6 +149,7 @@ public class BlockLogger {
     public void onBlockInteract(PlayerInteractEvent event) {
         if (!logBlockInteract) { return; }
         if (event.action!=PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) { return; }
+        if(CoreConfig.LOG_EXCLUDE_OPS && ServerUtils.isOP(event.entityPlayer.getGameProfile())) {return;}
         final File logFile = new File(interactDirectory, DATE_FORMAT.format(Calendar.getInstance().getTime()) + ".csv");
         new SaveThread(String.format(
                 "%s,%s,%s,%s,%s,%s,%s,%s,%s",
