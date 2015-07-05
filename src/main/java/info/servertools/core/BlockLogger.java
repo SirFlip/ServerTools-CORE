@@ -20,7 +20,9 @@ import info.servertools.core.util.SaveThread;
 
 import com.google.common.io.Files;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.block.Block;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 
 import java.io.File;
@@ -31,22 +33,26 @@ import java.util.Calendar;
 
 public class BlockLogger {
 
-    private static final String FILE_HEADER = "TimeStamp,UUID,DimID,BlockX,BlockY,BlockZ,BlockName";
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("MM-dd-YYYY");
+    private static final String FILE_HEADER = "TimeStamp,UUID,PlayerName,DimID,BlockX,BlockY,BlockZ,BlockName,LocBlockName";
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd");
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("kk-mm-ss");
 
     private final File breakDirectory;
     private final File placeDirectory;
+    private final File interactDirectory;
 
     private final boolean logBlockPlaces;
     private final boolean logBlockBreaks;
+    private final boolean logBlockInteract;
 
 
-    public BlockLogger(File breakDirectory, File placeDirectory, boolean logBlockBreaks, boolean logBlockPlaces) {
+    public BlockLogger(File breakDirectory, File placeDirectory, File interactDirectory, boolean logBlockBreaks, boolean logBlockPlaces, boolean logBlockInteract) {
         this.logBlockBreaks = logBlockBreaks;
         this.logBlockPlaces = logBlockPlaces;
+        this.logBlockInteract = logBlockInteract;
         this.breakDirectory = breakDirectory;
         this.placeDirectory = placeDirectory;
+        this.interactDirectory = interactDirectory;
         if (logBlockBreaks) {
             if (breakDirectory.exists() && !breakDirectory.isDirectory()) {
                 throw new IllegalArgumentException("File with same name as block break logging directory detected");
@@ -59,6 +65,12 @@ public class BlockLogger {
             }
             placeDirectory.mkdirs();
         }
+        if (logBlockInteract) {
+            if (interactDirectory.exists() && !interactDirectory.isDirectory()) {
+                throw new IllegalArgumentException("File with same name as block interact logging directory detected");
+            }
+            interactDirectory.mkdirs();
+        }
         MinecraftForge.EVENT_BUS.register(this);
     }
 
@@ -67,14 +79,16 @@ public class BlockLogger {
         if (!logBlockBreaks) { return; }
         final File logFile = new File(breakDirectory, DATE_FORMAT.format(Calendar.getInstance().getTime()) + ".csv");
         new SaveThread(String.format(
-                "%s,%s,%s,%s,%s,%s,%s",
+                "%s,%s,%s,%s,%s,%s,%s,%s,%s",
                 TIME_FORMAT.format(Calendar.getInstance().getTime()), //When was it placed
                 event.getPlayer().getPersistentID(), // Who placed it (UUID)
+                event.getPlayer().getDisplayName(),
                 event.world.provider.dimensionId, // What dimension was it in
                 event.x, // XCoord
                 event.y, // YCoord
                 event.z, // ZCoord
-                event.block.getUnlocalizedName() // What block was it
+                event.block.getUnlocalizedName(),// What block was it
+                event.block.getLocalizedName()
 
         ) + Reference.LINE_SEPARATOR) {
             @Override
@@ -98,15 +112,16 @@ public class BlockLogger {
         if (!logBlockPlaces) { return; }
         final File logFile = new File(placeDirectory, DATE_FORMAT.format(Calendar.getInstance().getTime()) + ".csv");
         new SaveThread(String.format(
-                "%s,%s,%s,%s,%s,%s,%s",
+                "%s,%s,%s,%s,%s,%s,%s,%s,%s",
                 TIME_FORMAT.format(Calendar.getInstance().getTime()), //When was it placed
                 event.player.getPersistentID(), // Who placed it (UUID)
+                event.player.getDisplayName(),
                 event.world.provider.dimensionId, // What dimension was it in
                 event.x, // XCoord
                 event.y, // YCoord
                 event.z, // ZCoord
-                event.block.getUnlocalizedName() // What block was it
-
+                event.block.getUnlocalizedName(),// What block was it
+                event.block.getLocalizedName()
         ) + Reference.LINE_SEPARATOR) {
             @Override
             public void run() {
@@ -123,6 +138,43 @@ public class BlockLogger {
             }
         }.start();
     }
+
+
+   //File interactDirectory;
+    //boolean logBlockInteract;
+    @SubscribeEvent
+    public void onBlockInteract(PlayerInteractEvent event) {
+        if (!logBlockInteract) { return; }
+        if (event.action!=PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) { return; }
+        final File logFile = new File(interactDirectory, DATE_FORMAT.format(Calendar.getInstance().getTime()) + ".csv");
+        new SaveThread(String.format(
+                "%s,%s,%s,%s,%s,%s,%s,%s,%s",
+                TIME_FORMAT.format(Calendar.getInstance().getTime()), //When was it placed
+                event.entityPlayer.getPersistentID(), // Who placed it (UUID)
+                event.entityPlayer.getDisplayName(),
+                event.world.provider.dimensionId, // What dimension was it in
+                event.x, // XCoord
+                event.y, // YCoord
+                event.z, // ZCoord
+                event.world.getBlock(event.x,event.y,event.z).getUnlocalizedName(),// What block was it
+                event.world.getBlock(event.x,event.y,event.z).getLocalizedName()
+        ) + Reference.LINE_SEPARATOR) {
+            @Override
+            public void run() {
+                synchronized (interactDirectory) {
+                    try {
+                        if (!logFile.exists()) {
+                            writeHeader(logFile);
+                        }
+                        Files.append(data, logFile, Reference.CHARSET);
+                    } catch (IOException e) {
+                        super.log.warn("Failed to save block interact file to disk", e);
+                    }
+                }
+            }
+        }.start();
+    }
+
 
     private static void writeHeader(File file) throws IOException {
         Files.append(FILE_HEADER + Reference.LINE_SEPARATOR, file, Reference.CHARSET);

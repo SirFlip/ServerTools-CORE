@@ -28,6 +28,7 @@ public class CoreConfig {
     public static boolean GENERATE_FLAT_BEDROCK;
     public static boolean LOG_BLOCK_BREAKS;
     public static boolean LOG_BLOCK_PLACES;
+    public static boolean LOG_BLOCK_INTERACT;
     public static int DEFAULT_REMOVE_ALL_RANGE;
     public static String OP_CHAT_PREFIX;
     public static String VOICE_CHAT_PREFIX;
@@ -57,6 +58,7 @@ public class CoreConfig {
             category = "world";
             LOG_BLOCK_BREAKS = configuration.get(category, "Log Block Breaks", false, "This will log all blocks broken by players and fake players").getBoolean(false);
             LOG_BLOCK_PLACES = configuration.get(category, "Log Block Places", false, "This will log all blocks placed by players and fake players").getBoolean(false);
+            LOG_BLOCK_INTERACT = configuration.get(category, "Log Block Interact", false, "This will log all blocks Interacted by players and fake players").getBoolean(false);
 
         } catch (Exception e) {
             ServerTools.LOG.log(Level.FATAL, "Failed to load core configuration", e);

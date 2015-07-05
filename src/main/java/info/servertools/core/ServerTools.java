@@ -101,8 +101,10 @@ public class ServerTools {
             blockLogger = new BlockLogger(
                     new File(serverToolsDir, "blockBreaks"),
                     new File(serverToolsDir, "blockPlaces"),
+                    new File(serverToolsDir, "blockInteract"),
                     CoreConfig.LOG_BLOCK_BREAKS,
-                    CoreConfig.LOG_BLOCK_PLACES
+                    CoreConfig.LOG_BLOCK_PLACES,
+                    CoreConfig.LOG_BLOCK_INTERACT
             );
         }
 
